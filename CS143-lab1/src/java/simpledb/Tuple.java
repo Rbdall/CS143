@@ -30,13 +30,7 @@ public class Tuple implements Serializable {
         schema = td;
         fieldArray = new ArrayList<Field>(); 
         for(int i = 0; i < td.numFields(); i++){
-        	if(td.getFieldType(i) == simpledb.Type.INT_TYPE){
-        		fieldArray.add(new IntField(0));
-        	}
-        	else{
-        		//TODO fix arguments 
-        		fieldArray.add(new StringField("", 0));
-        	}
+        	fieldArray.add(null);
         }
     }
 
@@ -84,8 +78,7 @@ public class Tuple implements Serializable {
      *            field index to return. Must be a valid index.
      */
     public Field getField(int i) {
-        // some code goes here
-        return null;
+        return fieldArray.get(i);
     }
 
     /**
