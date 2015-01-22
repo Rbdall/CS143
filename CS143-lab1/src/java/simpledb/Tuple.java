@@ -90,8 +90,12 @@ public class Tuple implements Serializable {
      * where \t is any whitespace, except newline, and \n is a newline
      */
     public String toString() {
-        // some code goes here
-        throw new UnsupportedOperationException("Implement this");
+    	String result = "";
+        for(int i = 0; i < fieldArray.size(); i++) {
+        	result += this.getField(i) + " ";
+        }
+        result += '\n';
+        return result;
     }
     
     /**
@@ -100,8 +104,7 @@ public class Tuple implements Serializable {
      * */
     public Iterator<Field> fields()
     {
-        // some code goes here
-        return null;
+    	return fieldArray.iterator();
     }
     
     /**
