@@ -162,15 +162,15 @@ public class TupleDesc implements Serializable {
      * @return the new TupleDesc
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
-    	Type[] typeAr = new Type[td1.getSize()+td2.getSize()];
-    	String[] fieldAr = new String[td1.getSize()+td2.getSize()];
-    	for(int i = 0; i < td1.getSize(); i++){
+    	Type[] typeAr = new Type[td1.numFields()+td2.numFields()];
+    	String[] fieldAr = new String[td1.numFields()+td2.numFields()];
+    	for(int i = 0; i < td1.numFields(); i++){
     		typeAr[i] = td1.getFieldType(i);
     		fieldAr[i] = td1.getFieldName(i);
     	}
-    	for(int j = 0; j < td2.getSize(); j++){
-    		typeAr[j+td1.getSize()] = td2.getFieldType(j);
-    		fieldAr[j+td1.getSize()] = td2.getFieldName(j);
+    	for(int j = 0; j < td2.numFields(); j++){
+    		typeAr[j+td1.numFields()] = td2.getFieldType(j);
+    		fieldAr[j+td1.numFields()] = td2.getFieldName(j);
     	}
     	return new TupleDesc(typeAr, fieldAr);
     }
@@ -185,8 +185,18 @@ public class TupleDesc implements Serializable {
      * @return true if the object is equal to this TupleDesc.
      */
     public boolean equals(Object o) {
-        // some code goes here
-        return false;
+    	TupleDesc comp = (TupleDesc)o; 
+        if(comp.getSize() != this.getSize()){
+        	return false;
+        }
+        else{
+        	for(int i = 0; i < this.numFields(); i++){
+        		if(comp.getFieldType(i) != this.getFieldType(i)){
+        			return false;
+        		}
+        	}
+        }
+        return true;
     }
 
     public int hashCode() {
