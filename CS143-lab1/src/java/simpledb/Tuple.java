@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -12,7 +13,11 @@ import java.util.Iterator;
 public class Tuple implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
+    private TupleDesc schema;
+    private RecordId RID;
+    private ArrayList<Field> fieldArray; 
+    
     /**
      * Create a new tuple with the specified schema (type).
      * 
@@ -20,16 +25,26 @@ public class Tuple implements Serializable {
      *            the schema of this tuple. It must be a valid TupleDesc
      *            instance with at least one field.
      */
+    
     public Tuple(TupleDesc td) {
-        // some code goes here
+        schema = td;
+        fieldArray = new ArrayList<Field>(); 
+        for(int i = 0; i < td.numFields(); i++){
+        	if(td.getFieldType(i) == simpledb.Type.INT_TYPE){
+        		fieldArray.add(new IntField(0));
+        	}
+        	else{
+        		//TODO fix arguments 
+        		fieldArray.add(new StringField("", 0));
+        	}
+        }
     }
 
     /**
      * @return The TupleDesc representing the schema of this tuple.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return schema;
     }
 
     /**
@@ -37,8 +52,7 @@ public class Tuple implements Serializable {
      *         be null.
      */
     public RecordId getRecordId() {
-        // some code goes here
-        return null;
+        return RID;
     }
 
     /**
@@ -48,7 +62,7 @@ public class Tuple implements Serializable {
      *            the new RecordId for this tuple.
      */
     public void setRecordId(RecordId rid) {
-        // some code goes here
+        RID = rid;
     }
 
     /**
@@ -60,7 +74,7 @@ public class Tuple implements Serializable {
      *            new value for the field.
      */
     public void setField(int i, Field f) {
-        // some code goes here
+        fieldArray.set(i, f);
     }
 
     /**
@@ -98,10 +112,10 @@ public class Tuple implements Serializable {
     }
     
     /**
-     * reset the TupleDesc of thi tuple
+     * reset the TupleDesc of this tuple
      * */
     public void resetTupleDesc(TupleDesc td)
     {
-        // some code goes here
+        schema = null;
     }
 }
