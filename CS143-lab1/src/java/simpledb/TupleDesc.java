@@ -113,8 +113,12 @@ public class TupleDesc implements Serializable {
      *             if i is not a valid field reference.
      */
     public Type getFieldType(int i) throws NoSuchElementException {
-        // some code goes here
-        return null;
+    	if(i >= TDItemArray.size() || i < 0){
+        	throw new NoSuchElementException();
+        }
+        else{
+        	return (TDItemArray.get(i).fieldType);
+        }
     }
 
     /**
@@ -127,8 +131,12 @@ public class TupleDesc implements Serializable {
      *             if no field with a matching name is found.
      */
     public int fieldNameToIndex(String name) throws NoSuchElementException {
-        // some code goes here
-        return 0;
+        for(int i = 0; i < TDItemArray.size(); i++){
+        	if(TDItemArray.get(i).fieldName.equals(name)){
+        		return i;
+        	}
+        }
+        throw new NoSuchElementException();
     }
 
     /**
@@ -136,8 +144,11 @@ public class TupleDesc implements Serializable {
      *         Note that tuples from a given TupleDesc are of a fixed size.
      */
     public int getSize() {
-        // some code goes here
-        return 0;
+        int size = 0;
+        for(int i = 0; i < TDItemArray.size(); i++){
+        	size += TDItemArray.get(i).fieldType.getLen();
+        }
+        return size;
     }
 
     /**
@@ -151,8 +162,17 @@ public class TupleDesc implements Serializable {
      * @return the new TupleDesc
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
-        // some code goes here
-        return null;
+    	Type[] typeAr = new Type[td1.getSize()+td2.getSize()];
+    	String[] fieldAr = new String[td1.getSize()+td2.getSize()];
+    	for(int i = 0; i < td1.getSize(); i++){
+    		typeAr[i] = td1.getFieldType(i);
+    		fieldAr[i] = td1.getFieldName(i);
+    	}
+    	for(int j = 0; j < td2.getSize(); j++){
+    		typeAr[j+td1.getSize()] = td2.getFieldType(j);
+    		fieldAr[j+td1.getSize()] = td2.getFieldName(j);
+    	}
+    	return new TupleDesc(typeAr, fieldAr);
     }
 
     /**
