@@ -66,8 +66,23 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
-        // some code goes here
-        return null;
+    	HeapPage result = null;
+    	try {
+			RandomAccessFile raf = new RandomAccessFile(f, "r");
+			long fileOffput = pid.pageNumber()*BufferPool.PAGE_SIZE;
+	    	raf.seek(fileOffput);
+	    	byte[] data = new byte[BufferPool.PAGE_SIZE];
+	    	raf.read(data);
+	    	raf.close();
+	    	
+	    	result = new HeapPage(new HeapPageId(pid.getTableId(), pid.pageNumber()), data);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+    	
+        return result;
     }
 
     // see DbFile.java for javadocs
