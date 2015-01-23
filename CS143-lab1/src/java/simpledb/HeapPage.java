@@ -66,7 +66,7 @@ public class HeapPage implements Page {
         @return the number of tuples on this page
     */
     private int getNumTuples() {        
-        return tuples.length;
+		return (int)Math.floor((BufferPool.PAGE_SIZE*8) / (Database.getCatalog().getTupleDesc(pid.getTableId()).getSize() * 8 + 1));
 
     }
 
@@ -75,9 +75,7 @@ public class HeapPage implements Page {
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
     private int getHeaderSize() {        
-        
-        return header.length;
-                 
+        return (int)Math.ceil(numSlots / 8);
     }
     
     /** Return a view of this page before it was modified
@@ -109,8 +107,7 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    // some code goes here
-    throw new UnsupportedOperationException("implement this");
+	    return pid;
     }
 
     /**
@@ -279,15 +276,26 @@ public class HeapPage implements Page {
      * Returns the number of empty slots on this page.
      */
     public int getNumEmptySlots() {
-        // some code goes here
-        return 0;
+        int result = 0;
+        for(int i = 0; i < header.length; i++){
+        	for(int j = 0; j < 8; j++){
+        		if(((header[i] >> j) & 1) == 0){
+        			result++;
+        		}
+        	}
+        }
+        return result;
     }
 
     /**
      * Returns true if associated slot on this page is filled.
      */
     public boolean isSlotUsed(int i) {
-        // some code goes here
+        int byteSlot = i/8;
+        int bitSlot = i%8;
+        if(((header[byteSlot] >> bitSlot) & 1) == 1){
+        	return true;
+        }
         return false;
     }
 
@@ -303,9 +311,15 @@ public class HeapPage implements Page {
      * @return an iterator over all tuples on this page (calling remove on this iterator throws an UnsupportedOperationException)
      * (note that this iterator shouldn't return tuples in empty slots!)
      */
+    
     public Iterator<Tuple> iterator() {
-        // some code goes here
-        return null;
+    	ArrayList<Tuple> tupList = new ArrayList<Tuple>();
+    	for(int i = 0; i < numSlots; i++){
+    		if(isSlotUsed(i)){
+    			tupList.add(tuples[i]);
+    		}
+    	}
+        return tupList.iterator();
     }
 
 }
