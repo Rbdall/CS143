@@ -56,7 +56,11 @@ public class RecordId implements Serializable {
     		return false;
     	}
     	RecordId comp = (RecordId) o;
-    	// TODO: implement this part
+    	if (comp.getPageId().equals(this.getPageId())){
+    		if (comp.tupleno() == this.tupleno()){
+    			return true;
+    		}
+    	}
         return false;
     }
 
@@ -68,9 +72,8 @@ public class RecordId implements Serializable {
      */
     @Override
     public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+    	return Integer.valueOf(String.valueOf(this.getPageId().hashCode()) + 
+        		String.valueOf(this.tupleno()));
     }
 
 }
