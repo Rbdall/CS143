@@ -14,6 +14,13 @@ public class HeapFileIterator implements DbFileIterator{
 	private PageId currPageId;
 	private int currPageNumber;
 	private Iterator<Tuple> tupleIterator;
+	
+	private HeapPage nextPage;
+	private PageId nextPageId;
+	private int nextPageNumber;
+	private Iterator<Tuple> nextTupleIterator;
+	
+	
 	private boolean open;
 	
 	public HeapFileIterator(TransactionId inputTid, HeapFile target){
@@ -44,10 +51,11 @@ public class HeapFileIterator implements DbFileIterator{
   		return true;
   	}
   	else if(currPageNumber < file.numPages()){
-  		for(int i = 1; currPageNumber+i <= file.numPages(); i++ ){
-      		PageId nextPageId = new HeapPageId(file.getId(), currPageNumber+i);
-          	HeapPage nextPage = (HeapPage)(file.readPage(nextPageId));
-          	Iterator<Tuple> nextTupleIterator = nextPage.iterator();
+  		for(int i = 1; currPageNumber+i < file.numPages(); i++ ){
+  			nextPageNumber = currPageNumber+i;
+      		nextPageId = new HeapPageId(file.getId(), nextPageNumber);
+          	nextPage = (HeapPage)(file.readPage(nextPageId));
+          	nextTupleIterator = nextPage.iterator();
           	if(nextTupleIterator.hasNext()){
           		return true;
           	}
@@ -66,25 +74,19 @@ public class HeapFileIterator implements DbFileIterator{
    */
   public Tuple next()
       throws DbException, TransactionAbortedException, NoSuchElementException{ 
-  	if(!open || !hasNext()){
+  	if(!open /*|| !hasNext()*/){
   		throw new NoSuchElementException();
   	}
   	else if(tupleIterator.hasNext()){
   		return tupleIterator.next();
   	}
   	else if(currPageNumber < file.numPages()){
-  		for(int i = 1; currPageNumber+i <= file.numPages(); i++ ){
-      		PageId nextPageId = new HeapPageId(file.getId(), currPageNumber+i);
-          	HeapPage nextPage = (HeapPage)(file.readPage(nextPageId));
-          	Iterator<Tuple> nextTupleIterator = nextPage.iterator();
-          	if(nextTupleIterator.hasNext()){
-          		currPageId = nextPageId;
-          		currPage = nextPage;
-          		currPageNumber = currPageNumber+i;
-          		tupleIterator = nextTupleIterator;
-          		return tupleIterator.next();
-          	}
-  		}
+  		currPageId = nextPageId;
+  		currPage = nextPage;
+  		currPageNumber = nextPageNumber;
+  		tupleIterator = nextTupleIterator;
+  		return tupleIterator.next();
+    
   	}
   	throw new NoSuchElementException();
   }
