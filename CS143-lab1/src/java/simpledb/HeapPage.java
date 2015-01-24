@@ -293,6 +293,9 @@ public class HeapPage implements Page {
     public boolean isSlotUsed(int i) {
         int byteSlot = i/8;
         int bitSlot = i%8;
+        if(byteSlot >= header.length){
+        	System.out.println("no");
+        }
         if(((header[byteSlot] >> bitSlot) & 1) == 1){
         	return true;
         }

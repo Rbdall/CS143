@@ -80,6 +80,7 @@ public class HeapFileIterator implements DbFileIterator{
           	if(nextTupleIterator.hasNext()){
           		currPageId = nextPageId;
           		currPage = nextPage;
+          		currPageNumber = currPageNumber+i;
           		tupleIterator = nextTupleIterator;
           		return tupleIterator.next();
           	}
