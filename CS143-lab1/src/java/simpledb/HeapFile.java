@@ -3,6 +3,7 @@ package simpledb;
 import java.io.*;
 import java.util.*;
 
+
 /**
  * HeapFile is an implementation of a DbFile that stores a collection of tuples
  * in no particular order. Tuples are stored on pages, each of which is a fixed
@@ -17,7 +18,6 @@ public class HeapFile implements DbFile {
 	
 	private File f;
 	private TupleDesc td;
-	private ArrayList<HeapPage> pageArray;
 	
     /**
      * Constructs a heap file backed by the specified file.
@@ -29,8 +29,6 @@ public class HeapFile implements DbFile {
     public HeapFile(File f, TupleDesc td) {
     	this.f = f;
     	this.td = td;
-    	pageArray = new ArrayList<HeapPage>();
-    	//TODO: do anything else?
     }
 
     /**
@@ -113,11 +111,10 @@ public class HeapFile implements DbFile {
         return null;
         // not necessary for lab1
     }
-
+    
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
-        return null;
+        return new HeapFileIterator(tid, this);
     }
 
 }
