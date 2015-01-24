@@ -31,15 +31,15 @@ public class SeqScan implements DbIterator {
     private TransactionId tid;
     private int tableid;
     private String tableAlias;
-    private HeapFile file;
-    private HeapFileIterator fileIterator;
+    private DbFile file;
+    private DbFileIterator fileIterator;
     public SeqScan(TransactionId tid, int tableid, String tableAlias) {
         this.tid = tid;
         this.tableid = tableid;
         this.tableAlias = tableAlias;
         fileIterator = null;
         //Will have to implement with DbFile later
-        file = (HeapFile)Database.getCatalog().getDatabaseFile(tableid);
+        file = Database.getCatalog().getDatabaseFile(tableid);
     }
 
     /**
@@ -81,7 +81,8 @@ public class SeqScan implements DbIterator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        
+        fileIterator = file.iterator(tid);
+        fileIterator.open();
     }
 
     /**
@@ -94,27 +95,42 @@ public class SeqScan implements DbIterator {
      *         prefixed with the tableAlias string from the constructor.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        TupleDesc underlying = Database.getCatalog().getTupleDesc(tableid);
+        String[] fieldNames = new String[underlying.numFields()];
+        Type[] fieldTypes = new Type[underlying.numFields()];
+        
+        String newAlias = getAlias();
+        if(newAlias == null){
+        	newAlias = "null";
+        }
+        
+        for(int i = 0; i < underlying.numFields(); i++){
+        	fieldTypes[i] = underlying.getFieldType(i);
+        	if(underlying.getFieldName(i) == null){
+        		fieldNames[i] = newAlias + "." + "null";
+        	}
+        	else{
+        		fieldNames[i] = newAlias + "." + underlying.getFieldName(i);
+        	}
+        }
+        return new TupleDesc(fieldTypes, fieldNames);
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return false;
+        return fileIterator.hasNext();
     }
 
     public Tuple next() throws NoSuchElementException,
             TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        return fileIterator.next();
     }
 
     public void close() {
-        // some code goes here
+        fileIterator.close();
     }
 
     public void rewind() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // some code goes here
+        fileIterator.rewind();
     }
 }
