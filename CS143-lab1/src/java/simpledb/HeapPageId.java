@@ -5,8 +5,8 @@ public class HeapPageId implements PageId {
 	
 	private int tableId;
 	private int pageNum;
-	private static final int MAX_PAGES_PER_TABLE = 1048573;
-    /**
+
+	/**
      * Constructor. Create a page id structure for a specific page of a
      * specific table.
      *
@@ -38,7 +38,10 @@ public class HeapPageId implements PageId {
      * @see BufferPool
      */
     public int hashCode() {
-    	 return tableId * MAX_PAGES_PER_TABLE + pageNum + 31;
+    	 int bitmask = 0x0000FFFF;
+    	 int hashcode = (tableId & bitmask) << 16;
+    	 hashcode = hashcode | (pageNum & bitmask);
+    	 return hashcode;
     }
 
     /**
