@@ -64,14 +64,16 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
-        if(pool.size() == maxPages){
-        	throw new DbException(null);
-        }
-        else if(pool.containsKey(pid)){
+        if(pool.containsKey(pid)){
         	return pool.get(pid);
         }
+        else if(pool.size() == maxPages){
+        	throw new DbException(null);
+        }
         else{
-        	return pool.put(pid, Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid));
+        	Page newPage = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+        	pool.put(pid, newPage);
+        	return newPage;
         }
     }
 
