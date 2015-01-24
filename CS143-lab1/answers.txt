@@ -1,0 +1,19 @@
+Ryan Dall, 704016211
+Rebecca Sousa, 904050968
+
+CS 143 Lab 1 Writeup
+
+Design Decisions:
+-using a hashmap in the catalog - triple link
+-heap file iterator
+-how a heap file reads a page - random access file - seek quickly
+
+API changes: none
+
+Missing/incomplete elements: none
+
+Time analysis: 
+-a few hours each day, more leading up to due date
+-about 10 hours total
+
+Slip days used: 0. Slip days remaining: 4.
