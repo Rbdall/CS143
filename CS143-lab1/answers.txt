@@ -4,16 +4,19 @@ Rebecca Sousa, 904050968
 CS 143 Lab 1 Writeup
 
 Design Decisions:
--using a hashmap in the catalog - triple link
--heap file iterator
--how a heap file reads a page - random access file - seek quickly
+Most design decisions were made for us in lab 1. However, there are a few choices which are notable: 
+
+We chose to implement out readPage() function using a Java RandomAccessFile as it allowed us to seek quickly and easily to an offset.
+
+We had troubles with our initial design of the HeapFileIterator as it would read pages for open, hasNext and next. This caused us to fail the cache tests as we were reading 3x as much as necessary. This led to the implementation where hasNext will read in a page and store it, which can then be used without IO cost for the other calls.
+
+Hash codes were implemented by grabbing the last 16 bits of two integers with bit masks and concatenating them together.  
 
 API changes: none
 
 Missing/incomplete elements: none
 
 Time analysis: 
--a few hours each day, more leading up to due date
--about 10 hours total
+We estimate that the project amounted to somewhere in the realm of 10-15 hours of work spread out over a period of about a week.
 
 Slip days used: 0. Slip days remaining: 4.
