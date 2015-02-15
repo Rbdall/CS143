@@ -1,5 +1,7 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 /**
  * Knows how to compute some aggregate over a set of IntFields.
  */
@@ -21,9 +23,23 @@ public class IntegerAggregator implements Aggregator {
      * @param what
      *            the aggregation operator
      */
-
+    private HashMap<Field, ArrayList<Field>> groupings;
+    
+    
+    private int groupField;
+    private Type groupFieldType;
+    private int aggField;
+    private Op operator;
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        groupField = gbfield;
+        groupFieldType = gbfieldtype;
+        aggField = afield;
+        operator = what;
+        
+        groupings = new HashMap<Field, ArrayList<Field>>();
+        if(groupField == Aggregator.NO_GROUPING){
+        	groupings.put(new IntField(Aggregator.NO_GROUPING), new ArrayList<Field>());
+        }
     }
 
     /**
@@ -34,7 +50,18 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        if(groupField == Aggregator.NO_GROUPING){
+        	groupings.get(Aggregator.NO_GROUPING).add(tup.getField(aggField));
+        }
+        else{
+        	if(groupings.containsKey(tup.getField(groupField))){
+        		groupings.get(tup.getField(groupField)).add(tup.getField(aggField));
+        	}
+        	else{
+        		groupings.put(tup.getField(groupField), new ArrayList<Field>());
+        		groupings.get(tup.getField(groupField)).add(tup.getField(aggField));
+        	}
+        }
     }
 
     /**
@@ -46,9 +73,124 @@ public class IntegerAggregator implements Aggregator {
      *         the constructor.
      */
     public DbIterator iterator() {
-        // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+    	ArrayList<Tuple> resultTuples = new ArrayList<Tuple>();
+    	TupleDesc resultDesc;
+    	if(groupField == Aggregator.NO_GROUPING){
+        	resultDesc = new TupleDesc(new Type[]{Type.INT_TYPE});
+        	Tuple resultTup = new Tuple(resultDesc);
+        	switch(operator){
+	    		case MIN:
+	    			int min = Integer.MAX_VALUE;
+	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    				IntField castValue = (IntField)value;
+	    				if(castValue.getValue() < min){
+	    					min = castValue.getValue();
+	    				}
+	    			}
+	    			resultTup.setField(0, new IntField(min));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		case MAX:
+	    			int max = Integer.MIN_VALUE;
+	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    				IntField castValue = (IntField)value;
+	    				if(castValue.getValue() > max){
+	    					max = castValue.getValue();
+	    				}
+	    			}
+	    			resultTup.setField(0, new IntField(max));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		case COUNT:
+	    			int count = groupings.get(Aggregator.NO_GROUPING).size();
+	    			resultTup.setField(0, new IntField(count));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		case AVG:
+	    			int average = 0;
+	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    				IntField castValue = (IntField)value;
+	    				average += castValue.getValue();
+	    			}
+	    			resultTup.setField(0, new IntField(average/groupings.get(Aggregator.NO_GROUPING).size()));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		case SUM:
+	    			int sum = 0;
+	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    				IntField castValue = (IntField)value;
+	    				sum += castValue.getValue();
+	    			}
+	    			resultTup.setField(0, new IntField(sum));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		default:
+	    			break;
+        	}
+        	return new TupleIterator(resultDesc, resultTuples);
+    	}
+    	else{
+    		resultDesc = new TupleDesc(new Type[]{groupFieldType, Type.INT_TYPE});
+    		for(Field key : groupings.keySet()){
+    			Tuple resultTup = new Tuple(resultDesc);
+    			switch(operator){
+		    		case MIN:
+		    			int min = Integer.MAX_VALUE;
+		    			for(Field value : groupings.get(key)){
+		    				IntField castValue = (IntField)value;
+		    				if(castValue.getValue() < min){
+		    					min = castValue.getValue();
+		    				}
+		    			}
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(min));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		case MAX:
+		    			int max = Integer.MIN_VALUE;
+		    			for(Field value : groupings.get(key)){
+		    				IntField castValue = (IntField)value;
+		    				if(castValue.getValue() > max){
+		    					max = castValue.getValue();
+		    				}
+		    			}
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(max));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		case COUNT:
+		    			int count = groupings.get(key).size();
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(count));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		case AVG:
+		    			int average = 0;
+		    			for(Field value : groupings.get(key)){
+		    				IntField castValue = (IntField)value;
+		    				average += castValue.getValue();
+		    			}
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(average/groupings.get(key).size()));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		case SUM:
+		    			int sum = 0;
+		    			for(Field value : groupings.get(key)){
+		    				IntField castValue = (IntField)value;
+		    				sum += castValue.getValue();
+		    			}
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(sum));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		default:
+		    			break;
+    			}
+        	}
+    		return new TupleIterator(resultDesc, resultTuples);
+    	}
+        
     }
 
 }

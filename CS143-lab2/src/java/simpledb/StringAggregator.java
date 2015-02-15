@@ -1,5 +1,10 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import simpledb.Aggregator.Op;
+
 /**
  * Knows how to compute some aggregate over a set of StringFields.
  */
@@ -16,8 +21,24 @@ public class StringAggregator implements Aggregator {
      * @throws IllegalArgumentException if what != COUNT
      */
 
+    private HashMap<Field, ArrayList<Field>> groupings;
+    
+    
+    private int groupField;
+    private Type groupFieldType;
+    private int aggField;
+    private Op operator;
+    
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+    	groupField = gbfield;
+        groupFieldType = gbfieldtype;
+        aggField = afield;
+        operator = what;
+        
+        groupings = new HashMap<Field, ArrayList<Field>>();
+        if(groupField == Aggregator.NO_GROUPING){
+        	groupings.put(new StringField("No Group", "No Group".length()), new ArrayList<Field>());
+        }
     }
 
     /**
@@ -25,7 +46,18 @@ public class StringAggregator implements Aggregator {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+    	if(groupField == Aggregator.NO_GROUPING){
+        	groupings.get("No Group").add(tup.getField(aggField));
+        }
+        else{
+        	if(groupings.containsKey(tup.getField(groupField))){
+        		groupings.get(tup.getField(groupField)).add(tup.getField(aggField));
+        	}
+        	else{
+        		groupings.put(tup.getField(groupField), new ArrayList<Field>());
+        		groupings.get(tup.getField(groupField)).add(tup.getField(aggField));
+        	}
+        }
     }
 
     /**
@@ -37,8 +69,39 @@ public class StringAggregator implements Aggregator {
      *   aggregate specified in the constructor.
      */
     public DbIterator iterator() {
-        // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab2");
+    	ArrayList<Tuple> resultTuples = new ArrayList<Tuple>();
+    	TupleDesc resultDesc;
+    	if(groupField == Aggregator.NO_GROUPING){
+        	resultDesc = new TupleDesc(new Type[]{Type.STRING_TYPE});
+        	Tuple resultTup = new Tuple(resultDesc);
+        	switch(operator){
+	    		case COUNT:
+	    			int count = groupings.get("No Group").size();
+	    			resultTup.setField(0, new IntField(count));
+	    			resultTuples.add(resultTup);
+	    			break;
+	    		default:
+	    			break;
+        	}
+        	return new TupleIterator(resultDesc, resultTuples);
+    	}
+    	else{
+    		resultDesc = new TupleDesc(new Type[]{groupFieldType, Type.STRING_TYPE});
+    		for(Field key : groupings.keySet()){
+    			Tuple resultTup = new Tuple(resultDesc);
+    			switch(operator){
+		    		case COUNT:
+		    			int count = groupings.get(key).size();
+		    			resultTup.setField(0, key);
+		    			resultTup.setField(1, new IntField(count));
+		    			resultTuples.add(resultTup);
+		    			break;
+		    		default:
+		    			break;
+    			}
+        	}
+    		return new TupleIterator(resultDesc, resultTuples);
+    	}
     }
 
 }
