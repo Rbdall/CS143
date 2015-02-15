@@ -57,17 +57,18 @@ public class Join extends Operator {
      *      implementation logic.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
+    	super.open();
     	child1.open();
     	child2.open();
     }
 
     public void close() {
+    	super.close();
     	child1.close();
     	child2.close();
     }
@@ -95,20 +96,48 @@ public class Join extends Operator {
      * @return The next matching tuple.
      * @see JoinPredicate#filter
      */
+    
+    //Need a value to hold the current tuple being cross-product-ed between calls of fetchNext()
+    private Tuple firstTup = null;
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+    	while(child1.hasNext()){
+    		//If there isn't a stored tuple, get the next candidate from child1
+    		if(firstTup == null){
+    			firstTup = child1.next();
+    		}
+    		while(child2.hasNext()){
+    	        Tuple secondTup = child2.next();
+    	        if(p.filter(firstTup, secondTup)){
+    	        	TupleDesc combinedDesc = getTupleDesc();
+    	        	Tuple combined = new Tuple(combinedDesc);
+    	        	for(int i = 0; i < firstTup.getTupleDesc().numFields(); i++){
+    	        		combined.setField(i, firstTup.getField(i));
+    	        	}
+    	        	for(int j = 0; j < secondTup.getTupleDesc().numFields(); j++){
+    	        		combined.setField(j+firstTup.getTupleDesc().numFields(), secondTup.getField(j));
+    	        	}
+    	        	return combined;
+    	        }
+    		}
+    		//When the stored tuple has been compared to all tuples in child2, reset
+    		firstTup = null;
+    		child2.rewind();
+    	}
+    	return null;
+        
     }
 
     @Override
     public DbIterator[] getChildren() {
         // some code goes here
-        return null;
+    	DbIterator[] arr = {child1, child2};
+        return arr;
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        child1 = children[0];
+        child2 = children[1];
     }
 
 }

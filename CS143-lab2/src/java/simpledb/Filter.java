@@ -27,24 +27,26 @@ public class Filter extends Operator {
     }
 
     public Predicate getPredicate() {
-        return this.p;
+        return p;
     }
 
     public TupleDesc getTupleDesc() {
-        return this.child.getTupleDesc();
+        return child.getTupleDesc();
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-    	this.child.open();
+    	super.open();
+    	child.open();
     }
 
     public void close() {
-    	this.child.close();
+    	super.close();
+    	child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-    	this.child.rewind();
+    	child.rewind();
     }
 
     /**
@@ -58,19 +60,24 @@ public class Filter extends Operator {
      */
     protected Tuple fetchNext() throws NoSuchElementException,
             TransactionAbortedException, DbException {
-        // some code goes here
+        while(child.hasNext()){
+        	Tuple next = child.next();
+        	if(p.filter(next)){
+        		return next;
+        	}
+        }
         return null;
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+    	DbIterator[] arr = {child};
+        return arr;
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        child = children[0];
     }
 
 }
