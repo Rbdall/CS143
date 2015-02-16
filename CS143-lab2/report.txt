@@ -1,0 +1,18 @@
+Rebecca Sousa, 904050968
+Ryan Dall, 704016211
+
+Lab 2 Report
+
+Design Decisions:
+
+For eviction, we went with MRU because it was the simplest implementation. When inserting into the buffer pool, we kept track of the most recently added item. Then, when the pool is full and we need to evict a page, we have easy access to the page that should be replaced. We simply call evict on the most recently added item and replace it with the newly inserted item.
+
+For join, we went with a nested loop, again because it was the simplest implementation.
+
+API changes: none
+
+Missing/incomplete elements: none
+
+Time spent: approximately 15 hours
+
+Slip days used: 0. Slip days remaining: 4.
