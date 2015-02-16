@@ -31,13 +31,13 @@ public class Insert extends Operator {
             throws DbException {
         this.t = t;
         this.child = child;
-        this.tid = tableid;
-        //if(this.child.getTupleDesc() != Database.getCatalog().getTupleDesc(this.tid))
-        	//throw new DbException("TupleDesc of child differs from table");
+        tid = tableid;
+        /*if(child.getTupleDesc() != Database.getCatalog().getTupleDesc(tableid))
+        	throw new DbException("TupleDesc of child differs from table");*/
     }
 
     public TupleDesc getTupleDesc() {
-        return child.getTupleDesc();
+        return new TupleDesc(new Type[] {Type.INT_TYPE});
     }
 
     public void open() throws DbException, TransactionAbortedException {
@@ -67,23 +67,30 @@ public class Insert extends Operator {
      * @see Database#getBufferPool
      * @see BufferPool#insertTuple
      */
+    private boolean alreadyRun = false;
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        int count = 0;
-        while(child.hasNext()){
-        	Tuple next = child.next();
-        	try {
-				Database.getBufferPool().insertTuple(t, tid, next);
-				count++;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+        if(!alreadyRun){
+        	alreadyRun = true;
+	    	int count = 0;
+	        while(child.hasNext()){
+	        	Tuple next = child.next();
+	        	try {
+					Database.getBufferPool().insertTuple(t, tid, next);
+					count++;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        }
+	    	
+	    	TupleDesc resultTd = new TupleDesc(new Type[] {Type.INT_TYPE});
+	        Tuple result = new Tuple(resultTd);
+	        result.setField(0, new IntField(count));
+	        return result;
         }
-    	
-    	TupleDesc resultTd = new TupleDesc(new Type[] {Type.INT_TYPE});
-        Tuple result = new Tuple(resultTd);
-        result.setField(0, new IntField(count));
-        return result;
+        else{
+        	return null;
+        }
     }
 
     @Override
