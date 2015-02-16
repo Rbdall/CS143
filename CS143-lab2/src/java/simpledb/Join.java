@@ -75,6 +75,8 @@ public class Join extends Operator {
 
     public void rewind() throws DbException, TransactionAbortedException {
     	child1.rewind();
+    	firstTup = null;
+    	keepGoing = true;
     	child2.rewind();
     }
 

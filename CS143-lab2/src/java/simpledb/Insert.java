@@ -52,6 +52,7 @@ public class Insert extends Operator {
 
     public void rewind() throws DbException, TransactionAbortedException {
         child.rewind();
+        alreadyRun = false;
     }
 
     /**

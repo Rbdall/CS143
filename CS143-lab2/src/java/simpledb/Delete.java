@@ -43,6 +43,7 @@ public class Delete extends Operator {
 
     public void rewind() throws DbException, TransactionAbortedException {
         child.rewind();
+        alreadyRun = false;
     }
 
     /**
