@@ -27,13 +27,13 @@ public class Insert extends Operator {
      *             if TupleDesc of child differs from table into which we are to
      *             insert.
      */
-    public Insert(TransactionId t,DbIterator child, int tableid)
+    public Insert(TransactionId t, DbIterator child, int tableid)
             throws DbException {
         this.t = t;
         this.child = child;
         this.tid = tableid;
-        if(this.child.getTupleDesc() != Database.getCatalog().getTupleDesc(this.tid))
-        	throw new DbException("TupleDesc of child differs from table");
+        //if(this.child.getTupleDesc() != Database.getCatalog().getTupleDesc(this.tid))
+        	//throw new DbException("TupleDesc of child differs from table");
     }
 
     public TupleDesc getTupleDesc() {
@@ -41,11 +41,13 @@ public class Insert extends Operator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        child.open();
+        super.open();
+    	child.open();
     }
 
     public void close() {
-        child.close();
+        super.close();
+    	child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {

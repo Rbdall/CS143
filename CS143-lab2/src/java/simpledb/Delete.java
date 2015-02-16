@@ -32,11 +32,13 @@ public class Delete extends Operator {
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        child.open();
+        super.open();
+    	child.open();
     }
 
     public void close() {
-        child.close();
+        super.close();
+    	child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
