@@ -51,7 +51,10 @@ public class IntegerAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
         if(groupField == Aggregator.NO_GROUPING){
-        	groupings.get(Aggregator.NO_GROUPING).add(tup.getField(aggField));
+        	Field tupGet = tup.getField(aggField);
+        	ArrayList<Field> vec = groupings.get(new IntField(Aggregator.NO_GROUPING));
+        	vec.add(tupGet);
+        	//groupings.get(Aggregator.NO_GROUPING).add(tup.getField(aggField));
         }
         else{
         	if(groupings.containsKey(tup.getField(groupField))){
@@ -81,7 +84,7 @@ public class IntegerAggregator implements Aggregator {
         	switch(operator){
 	    		case MIN:
 	    			int min = Integer.MAX_VALUE;
-	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    			for(Field value : groupings.get(new IntField(Aggregator.NO_GROUPING))){
 	    				IntField castValue = (IntField)value;
 	    				if(castValue.getValue() < min){
 	    					min = castValue.getValue();
@@ -92,7 +95,7 @@ public class IntegerAggregator implements Aggregator {
 	    			break;
 	    		case MAX:
 	    			int max = Integer.MIN_VALUE;
-	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    			for(Field value : groupings.get(new IntField(Aggregator.NO_GROUPING))){
 	    				IntField castValue = (IntField)value;
 	    				if(castValue.getValue() > max){
 	    					max = castValue.getValue();
@@ -102,22 +105,22 @@ public class IntegerAggregator implements Aggregator {
 	    			resultTuples.add(resultTup);
 	    			break;
 	    		case COUNT:
-	    			int count = groupings.get(Aggregator.NO_GROUPING).size();
+	    			int count = groupings.get(new IntField(Aggregator.NO_GROUPING)).size();
 	    			resultTup.setField(0, new IntField(count));
 	    			resultTuples.add(resultTup);
 	    			break;
 	    		case AVG:
 	    			int average = 0;
-	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    			for(Field value : groupings.get(new IntField(Aggregator.NO_GROUPING))){
 	    				IntField castValue = (IntField)value;
 	    				average += castValue.getValue();
 	    			}
-	    			resultTup.setField(0, new IntField(average/groupings.get(Aggregator.NO_GROUPING).size()));
+	    			resultTup.setField(0, new IntField(average/groupings.get(new IntField(Aggregator.NO_GROUPING)).size()));
 	    			resultTuples.add(resultTup);
 	    			break;
 	    		case SUM:
 	    			int sum = 0;
-	    			for(Field value : groupings.get(Aggregator.NO_GROUPING)){
+	    			for(Field value : groupings.get(new IntField(Aggregator.NO_GROUPING))){
 	    				IntField castValue = (IntField)value;
 	    				sum += castValue.getValue();
 	    			}

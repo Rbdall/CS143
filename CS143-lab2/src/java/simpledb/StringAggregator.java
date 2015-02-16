@@ -37,7 +37,7 @@ public class StringAggregator implements Aggregator {
         
         groupings = new HashMap<Field, ArrayList<Field>>();
         if(groupField == Aggregator.NO_GROUPING){
-        	groupings.put(new StringField("No Group", "No Group".length()), new ArrayList<Field>());
+        	groupings.put(new IntField(Aggregator.NO_GROUPING), new ArrayList<Field>());
         }
     }
 
@@ -47,7 +47,7 @@ public class StringAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
     	if(groupField == Aggregator.NO_GROUPING){
-        	groupings.get("No Group").add(tup.getField(aggField));
+        	groupings.get(new IntField(Aggregator.NO_GROUPING)).add(tup.getField(aggField));
         }
         else{
         	if(groupings.containsKey(tup.getField(groupField))){
@@ -72,11 +72,11 @@ public class StringAggregator implements Aggregator {
     	ArrayList<Tuple> resultTuples = new ArrayList<Tuple>();
     	TupleDesc resultDesc;
     	if(groupField == Aggregator.NO_GROUPING){
-        	resultDesc = new TupleDesc(new Type[]{Type.STRING_TYPE});
+        	resultDesc = new TupleDesc(new Type[]{Type.INT_TYPE});
         	Tuple resultTup = new Tuple(resultDesc);
         	switch(operator){
 	    		case COUNT:
-	    			int count = groupings.get("No Group").size();
+	    			int count = groupings.get(new IntField(Aggregator.NO_GROUPING)).size();
 	    			resultTup.setField(0, new IntField(count));
 	    			resultTuples.add(resultTup);
 	    			break;
@@ -86,7 +86,7 @@ public class StringAggregator implements Aggregator {
         	return new TupleIterator(resultDesc, resultTuples);
     	}
     	else{
-    		resultDesc = new TupleDesc(new Type[]{groupFieldType, Type.STRING_TYPE});
+    		resultDesc = new TupleDesc(new Type[]{groupFieldType, Type.INT_TYPE});
     		for(Field key : groupings.keySet()){
     			Tuple resultTup = new Tuple(resultDesc);
     			switch(operator){
