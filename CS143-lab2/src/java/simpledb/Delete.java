@@ -7,6 +7,9 @@ import java.io.IOException;
  * them from the table they belong to.
  */
 public class Delete extends Operator {
+	
+	private TransactionId t;
+	private DbIterator child;
 
     private static final long serialVersionUID = 1L;
 
@@ -20,24 +23,24 @@ public class Delete extends Operator {
      *            The child operator from which to read tuples for deletion
      */
     public Delete(TransactionId t, DbIterator child) {
-        // some code goes here
+        this.t = t;
+        this.child = child;
     }
 
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return child.getTupleDesc();
     }
 
     public void open() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child.open();
     }
 
     public void close() {
-        // some code goes here
+        child.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child.rewind();
     }
 
     /**
@@ -50,19 +53,33 @@ public class Delete extends Operator {
      * @see BufferPool#deleteTuple
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+    	int count = 0;
+    	while(child.hasNext()){
+    		Tuple next = child.next();
+    		try {
+				Database.getBufferPool().deleteTuple(t, next);
+				count++;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	TupleDesc resultTd = new TupleDesc(new Type[] {Type.INT_TYPE});
+        Tuple result = new Tuple(resultTd);
+        result.setField(0, new IntField(count));
+        return result;
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+    	DbIterator[] arr = {child};
+        return arr;
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        child = children[0];
     }
 
 }
