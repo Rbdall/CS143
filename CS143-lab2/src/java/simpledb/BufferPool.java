@@ -68,6 +68,7 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         if(pool.containsKey(pid)){
+        	mostRecentPage = pid;
         	return pool.get(pid);
         }
         else if(pool.size() == maxPages){
