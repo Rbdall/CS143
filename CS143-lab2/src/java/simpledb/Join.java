@@ -99,8 +99,11 @@ public class Join extends Operator {
     
     //Need a value to hold the current tuple being cross-product-ed between calls of fetchNext()
     private Tuple firstTup = null;
+    //keepGoing represents the value of child1.hasNext() stored between calls
+    //Gets set to false when child1 runs out of tuples to join
+    private boolean keepGoing = true; 
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-    	while(child1.hasNext()){
+    	while(keepGoing){
     		//If there isn't a stored tuple, get the next candidate from child1
     		if(firstTup == null){
     			firstTup = child1.next();
@@ -120,6 +123,9 @@ public class Join extends Operator {
     	        }
     		}
     		//When the stored tuple has been compared to all tuples in child2, reset
+    		if(child1.hasNext() == false){
+    			keepGoing = false;
+    		}
     		firstTup = null;
     		child2.rewind();
     	}
