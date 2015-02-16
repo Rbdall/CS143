@@ -3,6 +3,8 @@ package simpledb;
 import java.io.*;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -62,17 +64,23 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
+    private PageId mostRecentPage = null;
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         if(pool.containsKey(pid)){
         	return pool.get(pid);
         }
         else if(pool.size() == maxPages){
-        	throw new DbException(null);
+        	evictPage();
+        	Page newPage = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+        	pool.put(pid, newPage);
+        	mostRecentPage = pid;
+        	return newPage;
         }
         else{
         	Page newPage = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
         	pool.put(pid, newPage);
+        	mostRecentPage = pid;
         	return newPage;
         }
     }
@@ -137,8 +145,12 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+    	DbFile pageFile = Database.getCatalog().getDatabaseFile(tableId);
+    	ArrayList<Page> changedPages = pageFile.insertTuple(tid, t);
+    	for(Page pages : changedPages){
+    		pages.markDirty(true, tid);
+    		pool.put(pages.getId(), pages);
+    	}
     }
 
     /**
@@ -155,8 +167,12 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
+    	DbFile pageFile = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
+    	ArrayList<Page> changedPages = pageFile.deleteTuple(tid, t);
+    	for(Page pages : changedPages){
+    		pages.markDirty(true, tid);
+    		pool.put(pages.getId(), pages);
+    	}
     }
 
     /**
@@ -165,8 +181,14 @@ public class BufferPool {
      *     break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
-        // some code goes here
-        // not necessary for lab1
+        Set<PageId> pageIds = pool.keySet();
+        for(PageId id : pageIds){
+        	if(pool.get(id).isDirty() != null){
+        		DbFile file = Database.getCatalog().getDatabaseFile(id.getTableId());
+        		file.writePage(pool.get(id));
+        		pool.get(id).markDirty(false, new TransactionId());
+        	}
+        }
 
     }
 
@@ -185,8 +207,9 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
-        // some code goes here
-        // not necessary for lab1
+    	DbFile file = Database.getCatalog().getDatabaseFile(pid.getTableId());
+		file.writePage(pool.get(pid));
+		pool.get(pid).markDirty(false, new TransactionId());
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -201,8 +224,14 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
-        // some code goes here
-        // not necessary for lab1
+    	try{
+    		flushPage(mostRecentPage);
+    		pool.remove(mostRecentPage);
+    	}
+    	catch(IOException e){
+    		throw new DbException("Failed to flush page on eviction");
+    	}
+        
     }
 
 }
