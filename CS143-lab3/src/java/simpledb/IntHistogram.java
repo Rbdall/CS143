@@ -76,6 +76,9 @@ public class IntHistogram {
     	double result = -1.0;
     	switch(op){
     		case EQUALS:
+    			if(v > maxVal || v < minVal){
+    				return 0.0;
+    			}
     			for(int i = 0; i < bucketMinList.size(); i++){
     	    		if(v <= bucketMinList.get(i)){
     	    			result = (bucketList.get(i).size()/bucketWidth)/numTuples;
@@ -84,6 +87,9 @@ public class IntHistogram {
     	    	}
     			break;
     		case NOT_EQUALS:
+    			if(v > maxVal || v < minVal){
+    				return 1.0;
+    			}
     			for(int i = 0; i < bucketMinList.size(); i++){
     	    		if(v <= bucketMinList.get(i)){
     	    			result = (numTuples - (bucketList.get(i).size()/bucketWidth))/numTuples;
