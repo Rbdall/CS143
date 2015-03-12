@@ -175,7 +175,8 @@ public class JoinOptimizer {
         	case LESS_THAN:
         	case GREATER_THAN_OR_EQ:
         	case GREATER_THAN:
-        		card = (int)(.3 * card1 * card2);
+        		card = (int)(card1 * card2 * .3);
+        		break;
         	default:
         		card = -1;
         }
@@ -240,12 +241,35 @@ public class JoinOptimizer {
             HashMap<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
 
-        // See the project writeup for some hints as to how this function
-        // should work.
-
-        // some code goes here
-        //Replace the following
-        return joins;
+    	PlanCache cache = new PlanCache();
+    	for(int i = 1; i <= joins.size(); i++){
+    		Set<Set<LogicalJoinNode>> subsets = enumerateSubsets(joins, i);
+    		for(Set<LogicalJoinNode> s : subsets){
+    			Vector<LogicalJoinNode> bestPlan = new Vector<LogicalJoinNode>();
+        		double bestPlanCost = Double.MAX_VALUE;
+        		int bestCard = -1;
+        		for(LogicalJoinNode sPrime : s){
+        			CostCard newPlan = computeCostAndCardOfSubplan(stats, filterSelectivities, 
+        															sPrime, s, bestPlanCost, cache);
+        			if(newPlan != null){
+        				bestPlanCost = newPlan.cost;
+        				bestPlan = newPlan.plan;
+        				bestCard = newPlan.card;
+        			}
+        		}
+        		cache.addPlan(s, bestPlanCost, bestCard, bestPlan);
+    		}
+    		
+    	}
+    	Set<LogicalJoinNode> jSet = new HashSet<LogicalJoinNode>(joins);
+    	Vector<LogicalJoinNode> result = cache.getOrder(jSet);
+    	if(result == null){
+    		return joins;
+    	}
+    	else{
+    		return result;
+    	}
+        
     }
 
     // ===================== Private Methods =================================
