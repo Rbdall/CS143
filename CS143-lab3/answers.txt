@@ -1,7 +1,7 @@
 Rebecca Sousa, 904050968 
 Ryan Dall, 704016211
 
-Lab 3 Report
+Lab 4 Report
 
 Design Decisions:
 
@@ -12,3 +12,82 @@ Missing/incomplete elements: none
 Time spent: 
 
 Slip days used: 0. Slip days remaining: 4.
+
+Exercise 6:
+
+.1% plan
+The query plan is:
+                           Ï€(d.fname,d.lname),card:3008
+                            |
+                           â¨?(a.id=c.pid),card:3008
+  __________________________|___________________________
+  |                                                    |
+ Ïƒ(a.lname=Spicer),card:1                            â¨?(m.mid=c.mid),card:3008
+  |                                    ________________|_________________
+ Ïƒ(a.fname=John),card:1               |                                |
+  |                                   â¨?(d.id=m.did),card:278          |
+  |                           _________|_________                       |
+  |                           |                 |                     scan(Casts c)
+scan(Actor a)               scan(Director d)  scan(Movie_Director m)
+
+d.fname	d.lname	
+
+
+1% plan
+The query plan is:
+                           Ï€(d.fname,d.lname),card:29729
+                            |
+                           â¨?(a.id=c.pid),card:29729
+  __________________________|___________________________
+  |                                                    |
+ Ïƒ(a.lname=Spicer),card:1                            â¨?(m.mid=c.mid),card:29729
+  |                                    ________________|_________________
+ Ïƒ(a.fname=John),card:1               |                                |
+  |                                   â¨?(d.id=m.did),card:2791         |
+  |                           _________|_________                       |
+  |                           |                 |                     scan(Casts c)
+scan(Actor a)               scan(Director d)  scan(Movie_Director m)
+
+d.fname	d.lname	
+
+10% plan
+The query plan is:
+                           Ï€(d.fname,d.lname),card:323818
+                            |
+                           â¨?(a.id=c.pid),card:323818
+  __________________________|___________________________
+  |                                                    |
+ Ïƒ(a.lname=Spicer),card:1                            â¨?(m.mid=c.mid),card:323818
+  |                                    ________________|_________________
+ Ïƒ(a.fname=John),card:1               |                                |
+  |                                   â¨?(d.id=m.did),card:29762        |
+  |                           _________|_________                       |
+  |                           |                 |                     scan(Casts c)
+scan(Actor a)               scan(Director d)  scan(Movie_Director m)
+
+d.fname	d.lname	
+
+
+Our query:
+
+select m.name, m.year, d.lname
+from Actor a, Casts c, Movie m, Movie_Director md, Director d
+where a.id=c.pid and c.mid=m.id and m.id=md.mid and d.id=md.did
+and a.fname='Harrison' and a.lname='Ford';
+
+The query plan is:
+                                     Ï€(m.name,m.year,d.lname),card:21257
+                                      |
+                                     â¨?(a.id=c.pid),card:21257
+  ____________________________________|____________________________________
+  |                                                                       |
+ Ïƒ(a.lname=Ford),card:1                                                 â¨?(md.did=d.id),card:21257
+  |                                                   ____________________|____________________
+ Ïƒ(a.fname=Harrison),card:1                          |                                       |
+  |                                                  â¨?(m.id=md.mid),card:29762              |
+  |                                    _______________|_______________                        |
+  |                                    |                             |                        |
+  |                                   â¨?(m.id=c.mid),card:323818    |                        |
+  |                             _______|________                     |                        |
+scan(Actor a)                   |              |                   scan(Movie_Director md)    |
+                              scan(Movie m)  scan(Casts c)                                  scan(Director d)
