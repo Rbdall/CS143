@@ -4,53 +4,46 @@ Ryan Dall, 704016211
 Lab 4 Report
 
 Design Decisions:
+	Selectivity estimation was accomplished using the bucket method outlined in the spec. The histogram itself
+	was represented with a 2-D ArrayList where the first dimension is indexed by bucket number and the second
+	is the order in which the values were added to the bucket. A second ArrayList was used to contain the 
+	minimum value of each bucket. Therefore, any new value can be placed correctly by searching for the last
+	bucket in which the value is > the bucket's minimum value and pushing the value to the end of the bucket.
+	Given these two structures, selectivity can be estimated using the formulas given in the spec.
+	
+	Table Stats were calculated by taking two passes over the data. In the first pass, each tuple is iterated
+	over and the min and max value of each int field is stored in an ArrayList. In the second pass, the min 
+	and max values are used in order to construct the histogram of each field, and then each value is pushed
+	into the correct histogram. Histograms are stored in HashMaps of Integer->Histogram. This is equivilent to
+	using an ArrayList and could be refactored. However the original design was to map field names to 
+	histograms. This would not work as field names can be null. Therefore, changing to Integer required the 
+	least code changed in the implementation.
+	
+	Join ordering was implemented using an implementation of the pseudo-code found in the spec. Subsets of 
+	length 1 to joins.size() are examined. Plans for each subset compared with a single join removed. The
+	best of these plans is stored in the cache. Any plan that stored in the cache that has the same nodes
+	as the initial set is a complete optimal plan and is returned.
 
 API changes: none
 
-Missing/incomplete elements: none
+Missing/incomplete elements: avgSelectivity() was not implemented as it was not used in our join optimizations
 
-Time spent: 
+Known (possible) bugs: If a query will return no results, the entire system crashes. This is caused by a filter 
+returning null (no results found) and an operator subsequently throwing an error from finding a null. This seems
+like undesired behaviour which could be fixed with a change to operator. However, this is outside our exercises
+and was ignored. Queries which have at least one result will succeed. 
+
+Time spent: ~15 hours
+
+Difficult portions: Understanding the pseudo-code for join ordering was difficult. We had trouble deciphering 
+what "d-1 subsets of s" referred to as d was not defined in the rest of the hint.
 
 Slip days used: 0. Slip days remaining: 4.
 
+Exercise 1:
+
 Exercise 6:
 
-.1% plan
-The query plan is:
-                           Ï€(d.fname,d.lname),card:3008
-                            |
-                           â¨?(a.id=c.pid),card:3008
-  __________________________|___________________________
-  |                                                    |
- Ïƒ(a.lname=Spicer),card:1                            â¨?(m.mid=c.mid),card:3008
-  |                                    ________________|_________________
- Ïƒ(a.fname=John),card:1               |                                |
-  |                                   â¨?(d.id=m.did),card:278          |
-  |                           _________|_________                       |
-  |                           |                 |                     scan(Casts c)
-scan(Actor a)               scan(Director d)  scan(Movie_Director m)
-
-d.fname	d.lname	
-
-
-1% plan
-The query plan is:
-                           Ï€(d.fname,d.lname),card:29729
-                            |
-                           â¨?(a.id=c.pid),card:29729
-  __________________________|___________________________
-  |                                                    |
- Ïƒ(a.lname=Spicer),card:1                            â¨?(m.mid=c.mid),card:29729
-  |                                    ________________|_________________
- Ïƒ(a.fname=John),card:1               |                                |
-  |                                   â¨?(d.id=m.did),card:2791         |
-  |                           _________|_________                       |
-  |                           |                 |                     scan(Casts c)
-scan(Actor a)               scan(Director d)  scan(Movie_Director m)
-
-d.fname	d.lname	
-
-10% plan
 The query plan is:
                            Ï€(d.fname,d.lname),card:323818
                             |
@@ -67,16 +60,30 @@ scan(Actor a)               scan(Director d)  scan(Movie_Director m)
 
 d.fname	d.lname	
 
+Our join optimizer produces the same tree for all database sizes. All joins and selections
+are performed with equivalence operators. Any non-equivalence operators would end up on 
+the right as they produce a higher cardinality. Past this, actor ends up on the left-most
+branch as finding a specific first and last name is highly selective, producing only a 
+handful of results. Looking at the other half of the tree, Director must be joined to 
+Mobie_Director prior to the join to Casts. Director is a unique listing of each director
+while Movie_Director has an entry for each movie made by a director. Therefore, Director
+must have a lower cardinality than Movie_Director and has been correctly placed on the
+left. This combination is then placed on the left of Casts. The cardinality of each is
+probably fairly similar (one tuple for each movie made). So this decision may have been 
+made based on a slight difference, or it might be leveraging the fact that Director and
+Movie_Director were both joined on primary keys to do another primary key cardinality 
+estimation while mid is not the primary key of Casts and does not get the same benefits. 
+
 
 Our query:
 
-select m.name, m.year, d.lname
+select m.name, m.year, d.lname, c.role
 from Actor a, Casts c, Movie m, Movie_Director md, Director d
 where a.id=c.pid and c.mid=m.id and m.id=md.mid and d.id=md.did
 and a.fname='Harrison' and a.lname='Ford';
 
 The query plan is:
-                                     Ï€(m.name,m.year,d.lname),card:21257
+                                     Ï€(m.name,m.year,d.lname, c.role),card:21257
                                       |
                                      â¨?(a.id=c.pid),card:21257
   ____________________________________|____________________________________
@@ -91,3 +98,17 @@ The query plan is:
   |                             _______|________                     |                        |
 scan(Actor a)                   |              |                   scan(Movie_Director md)    |
                               scan(Movie m)  scan(Casts c)                                  scan(Director d)
+
+Our query shares a very similar structure to the query above. Once again Actor appears on the
+left-most branch as names are highly selective. The right side of the query requires 3 joins
+from the where clause. Casts to Movies, Movies to Move_Directors and Directors to Movie_Directors.
+The plan creates an interesting structure first joining Movies to Casts. Movies is on the left as
+it is being joined on a primary key while casts isn't, so the estimated cardinality is lower. This
+combination then gets a similar benefit being joined against Move_Director.mid which is not its 
+primary key. The choice to put Directors to the right of this combination is puzzling. The 
+combination should have a tuple for every movie while director only has a tuple for each unique
+director. This would mean the cardinality of the left element is greater than the right element
+incorrectly. This cause of this may be the fact that when our cardinality estimation function finds
+two tables both being joined on primary keys, it arbitrarily returns the cardinality of the first
+table.
+
