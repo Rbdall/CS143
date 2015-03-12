@@ -76,6 +76,9 @@ public class TableStats {
      *            The cost per page of IO. This doesn't differentiate between
      *            sequential-scan IO and disk seeks.
      */
+    //design note: originally was using hash maps of <Field Name, Hist>
+    //Field names can be null, switched to <Integer, Hist> to avoid refactoring
+    //code to use an equal ArrayList
     private ConcurrentHashMap<Integer, IntHistogram> intFieldStats;
     private ArrayList<Integer> maxValue;
     private ArrayList<Integer> minValue;

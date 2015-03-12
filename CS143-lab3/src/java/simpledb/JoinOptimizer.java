@@ -107,11 +107,8 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Project 3.
             return card1 + cost1 + cost2;
         } else {
-            // some code goes here.
-            // HINT: You may need to use the variable "j" if you implemented
-            // a join algorithm that's more complicated than a basic nested-loops
-            // join.
-            return -1.0;
+        	//joincost(t1 join t2) = scancost(t1) + ntups(t1) x scancost(t2) //IO cost + ntups(t1) x ntups(t2)  //CPU cost
+            return (cost1 + (card1 * cost2) + (card1 * card2));
         }
     }
 
@@ -155,7 +152,33 @@ public class JoinOptimizer {
             boolean t2pkey, Map<String, TableStats> stats,
             Map<String, Integer> tableAliasToId) {
         int card = 1;
-        // some code goes here
+        switch(joinOp){
+        	case EQUALS:
+        		if(t1pkey){
+        			card = card2;
+        		}
+        		else if(t2pkey){
+        			card = card1;
+        		}
+        		else{
+        			if(card1 > card2){
+        				card = card1;
+        			}
+        			else{
+        				card = card2;
+        			}
+        		}
+        		break;
+        	case NOT_EQUALS:
+        	case LIKE:
+        	case LESS_THAN_OR_EQ:
+        	case LESS_THAN:
+        	case GREATER_THAN_OR_EQ:
+        	case GREATER_THAN:
+        		card = (int)(.3 * card1 * card2);
+        	default:
+        		card = -1;
+        }
         return card <= 0 ? 1 : card;
     }
 
