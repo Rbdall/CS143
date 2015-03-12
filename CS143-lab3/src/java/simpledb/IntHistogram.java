@@ -22,7 +22,7 @@ public class IntHistogram {
      */
 	private int minVal;
 	private int maxVal;
-	private int bucketWidth = 0;
+	private double bucketWidth = 0;
 	private ArrayList<ArrayList<Integer>> bucketList;
 	private ArrayList<Integer> bucketMinList;
 	private int numTuples = 0;
