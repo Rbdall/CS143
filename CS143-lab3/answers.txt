@@ -40,7 +40,41 @@ what "d-1 subsets of s" referred to as d was not defined in the rest of the hint
 
 Slip days used: 0. Slip days remaining: 4.
 
+
 Exercise 1:
+
+Step 1: simpledb.Parser.main() and simpledb.Parser.start() 
+	simpledb.Parser.main() is the entry point for the SimpleDB system. It calls simpledb.Parser.start(). The latter 		
+	performs three main actions:
+
+	-It populates the SimpleDB catalog from the catalog text file provided by the user as argument 
+	 (Database.getCatalog().loadSchema(argv[0]);).
+	-For each table defined in the system catalog, it computes statistics over the data in the table by calling: 
+	 TableStats.computeStatistics(), which then does: TableStats s = new TableStats(tableid, IOCOSTPERPAGE);
+	-It processes the statements submitted by the user (processNextStatement(new ByteArrayInputStream(statementBytes));)
+
+Step 2: simpledb.Parser.processNextStatement() 
+	This method takes two key actions:
+	-First, it gets a physical plan for the query by invoking handleQueryStatement((ZQuery)s);
+	-Then it executes the query by calling query.execute();
+
+Step 3: simpledb.Parser.handleQueryStatement() 
+	-Gets a logical plan by invoking parseQueryLogicalPlan(tId, s);
+	-Forms a physical plan by invoking lp.physicalPlan(tId, TableStats.getStatsMap(), explain);
+	-Prints out the tree by invoking the printQueryPlanTree method using m.invoke(c.newInstance(), 
+	 physicalPlan,System.out);
+
+Step 4: simpledb.Parser.parseQueryLogicalPlan()
+	-Parses query into data structures to represent the FROM clause, WHERE clause, etc.
+
+Step 5: simpledb.Query.execute()
+	-Grabs the tuple descriptor, adds field names to it, and prints them out
+	-Runs this.start() to start the query
+	-Calls hasNext() to get tuples and print them out
+
+Step 6: back to simpledb.Parser.processNextStatement() 
+	-Commits the query
+
 
 Exercise 6:
 
